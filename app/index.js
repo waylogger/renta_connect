@@ -40,15 +40,16 @@ export async function saveSecret(secret, secFile) {
 }
 
 export async function getToken(accessData) {
-	if (!accessData || accessData.UserName === undefined || accessData.PasswordHash === undefined || accessData.LongToken === undefined){
+	if (!accessData) {
 		return undefined;
 	}
 	const path = `${process.env.server}:${process.env.port}${process.env.signInEndpoint}`;
 	console.log(JSON.stringify(accessData));
-	 const token = await fetch(path,{
-	 	method: 'POST',
-	 	body: JSON.stringify(accessData),
-	 });
+	const token = await fetch(path, {
+		method: 'POST',
+		body: JSON.stringify(accessData),
+		headers: { 'Content-Type': 'application/json' },
+	});
 
 	return token;
 
@@ -61,10 +62,10 @@ export async function auth(secFile, accessData) {
 		token = await getToken(accessData);
 		if (!token)
 			return codes.authFailure;
-		await saveSecret(JSON.stringify(token,null,' '),secFile);
-		return codes.authSuccess;	
+		await saveSecret(JSON.stringify(token, null, ' '), secFile);
+		return codes.authSuccess;
 	}
-	else{
+	else {
 		token = savedToken;
 		return codes.authSuccess;
 	}
@@ -73,7 +74,6 @@ export async function auth(secFile, accessData) {
 
 const userName = process.env.login;
 const PasswordHash = crypto.createHash(process.env.hashAlg).update(process.env.password).digest(process.env.digType);
-const signInEndpoint = process.env.signInEndpoint;
 
 const accessData = {
 	UserName: userName,
@@ -86,7 +86,7 @@ const fetchOpt = {
 	body: JSON.stringify(accessData),
 }
 
-auth(secretFile,accessData).then(a=>{
+auth(secretFile, accessData).then(a => {
 	console.log(token);
 })
 

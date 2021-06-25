@@ -6,7 +6,7 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest -i",
     "dev": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=development nodemon ./app/index.js",
-    "build": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=production node ./app/index.js"
+    "build": "rm secret && touch secret && NODE_OPTIONS=--experimental-vm-modules NODE_ENV=production node ./app/index.js"
   },
   "repository": {
     "type": "git",
