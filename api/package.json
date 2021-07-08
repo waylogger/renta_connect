@@ -1,0 +1,34 @@
+{
+  "name": "renta_connect",
+  "version": "1.0.0",
+  "description": "for toprent15.ru",
+  "main": "./app/index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest -i",
+    "build": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=production node  -r dotenv/config ./app/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/waylogger/renta_connect.git"
+  },
+  "author": "wlr986",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/waylogger/renta_connect/issues"
+  },
+  "homepage": "https://github.com/waylogger/renta_connect#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "form-data": "^4.0.0",
+    "moment": "^2.29.1",
+    "nanoid": "^3.1.23",
+    "node-fetch": "^2.6.1",
+    "query-string": "^7.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.29.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.4"
+  },
+  "type": "module"
+}
