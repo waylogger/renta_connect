@@ -381,7 +381,7 @@
 .ex-inputs-picker {
   position: absolute;
   z-index: 1000;
-  left: 10.5%;
+  left: 50.5%;
   top: calc(100% + 8px);
   opacity: 0;
   z-index: -20;
@@ -457,7 +457,7 @@
 
 .dr-cal-start .dp-next,
 .dr-cal-end .dp-prev {
-  visibility: hidden;
+  visibility: visible;
 }
 
 .dr-cals .dp-current:hover,

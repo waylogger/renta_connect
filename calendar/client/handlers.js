@@ -74,63 +74,117 @@ function deColoringBorder(inx, fieldClass) {
 */
 
 function reformDate(date) {
+	if (!date) return;
 	let [dt, time] = date.split(' ');
 	dt = dt.split('.').reverse().join('-');
 
 	return `${dt} ${time}`;
+}
+
+/**
+ * @function
+ * @param {object}
+ * @returns {FormData}
+ * @description принимает объект и возвращает форму
+*/
+function objToFormData(obj) {
+	const form = new FormData();
+	Object.keys(obj).forEach(
+		(item) => {
+			form.append(item, obj[item]);
+		}
+	)
+
+	return form;
+
+}
+
+/**
+ * @function
+ * @param {Date} start
+ * @param {Date} end
+ * @returns {string} duration
+ * @example ('01-01-2000 10:00', '02-01-2000 10:00') => (на 1 день с 01.01.2000 г. 10:00 по 02.02.2000 10:00)
+*/
+function translateDate(start, end) {
+	if (!start || !end) return undefined;
+
+	const d1 = new Date(start.split(' ')[0]);
+	const d2 = new Date(end.split(' ')[0]);
+	const t1 = start.split(' ')[1];
+	const t2 = end.split(' ')[1];
+
+	const numOfDays = ((d2 - d1) / 1000 / (24 * 3600)) + 1;
+	const numOfDaysStr = numOfDays.toString();
+	let dayWord = '';
+	let last2num = parseInt(numOfDaysStr, 10);
+	if (last2num >= 10 && last2num <= 19) {
+		dayWord = 'дней'
+		return `на ${numOfDaysStr} ${dayWord} с ${d1.toLocaleDateString()} ${t1} по ${d2.toLocaleDateString()} ${t2}`;
+	}
+	let lastNum = parseInt(numOfDaysStr.charAt(numOfDaysStr.length - 1), 10);
+	if (lastNum === 1) dayWord = 'день';
+	else if (lastNum === 0) dayWord = 'дней';
+	else if (lastNum > 1 && lastNum < 5) dayWord = 'дня';
+	else if (lastNum >= 5) dayWord = 'дней';
+	return `на ${numOfDaysStr} ${dayWord} с ${d1.toLocaleDateString()} ${t1} по ${d2.toLocaleDateString()} ${t2}`;
+
+
+
 }
 /**
  * @function
  * @description "book" button handler the function should collect data from the fields, transform the data and send it to the server
  * 
 */
-function bookCar() {
+async function bookCar() {
+	if (dataFromServer.dataSent) return;
 	let badBit = false;
 	state.forEach((el, inx) => {
 		if (!el) {
 			coloringBorder(inx, fieldClasses.validationFailed);
-			console.log(inx);
 			badBit = true;
 		}
 		else {
 			coloringBorder(inx, fieldClasses.validationPassed);
 		}
 	})
-	// const begin = '2021-07-07 00:00';
 
 	const custName = `${$(`#${customerName.id}`).val()} -`
 	const custPhone = `${$(`#${customerPhone.id}`).val()}`;
 	const car_id = 9;
 	const begin = reformDate($(`#leftDate`).val());
 	const end = reformDate($(`#rightDate`).val());
-	const place_id = 4;
+	const receivePlaceId = dataFromServer.getPlaceId($(`#receivePlaceSelect`).val());
+	const returnPlaceId = dataFromServer.getPlaceId($(`#returnPlaceSelect`).val());
 	const include_reserves = true;
 	const include_idles = true;
 	const city_id = 1;
-
-
 	if (badBit) return false;
 
-	$(`#${customerPhone.id}`).val();
-	$(`#${proofOfAgeAndExperience.id}`).val();
-	$(`#${agreementWithPolicy.id}`).val();
-	$(`#receivePlaceSelect`).val();
-	$(`#returnPlaceSelect`).val();
 
-	const form = new FormData();
-	form.append('fio', custName);
-	form.append('phone', custPhone);
-	form.append('car_id', car_id);
-	form.append('begin', begin);
-	form.append('end', end);
-	form.append('begin_place_id', place_id);
-	form.append('end_place_id', place_id);
-	form.append('services', JSON.stringify([]));
-	form.append('prepayment', 0);
-	form.append('file', '');
+	const bidObj = {
+		fio: custName,
+		phone: custPhone,
+		car_id: 9,
+		begin: begin,
+		end: end,
+		begin_place_id: receivePlaceId,
+		end_place_id: returnPlaceId,
+		prepayment: 0,
+		file: '',
+	}
 
+		;
+	const bidForm = objToFormData(bidObj);
 
-
+	const bid = await sendRequest(bidForm);
+	if (bid.bid_id) {
+		$(`#bookButtonId`).text('Поздравляем! Заявка на бронироавние успешно отправлена!');
+		$(`#bookButtonId`).removeClass('book__btn');
+		$(`#bookButtonId`).addClass('book__btn_send');
+		dataFromServer.dataSent = true;
+	}
 	return true;
 }
 //-------------------------------------------------------------------------------------------------
@@ -291,4 +345,74 @@ function returnPlaceHandle() {
 		state[returnPlace.inx] = false;
 		deColoringBorder(returnPlace.inx, fieldClasses.validationPassed);
 	}
+}
+
+/**
+ * @function
+ * @callback
+*/
+function carPreview() {
+	const currCar = dataFromServer.getCurrentCar();
+	/*
+	тут убираем цвет, а после его выбора, надпись обновится
+	*/
+	//0 потому что все машине в массиве отличаются только цветом
+	const car = currCar[0].model.replace(/\([^\s]+\)/, ''); //убираем цвет
+	$('#carName').text(`Аренда: ${car}`);
+}
+
+/**
+ * @function
+ * @callback
+*/
+function datePreview() {
+	const begin = reformDate($(`#leftDate`).val());
+	const end = reformDate($(`#rightDate`).val());
+	$(`#periodRent`).text(translateDate(begin, end));
+}
+
+/**
+ * @function
+ * @callback
+*/
+async function costPreview() {
+
+	const begin = reformDate($(`#leftDate`).val());
+	const end = reformDate($(`#rightDate`).val());
+	let receivePlaceId = dataFromServer.getPlaceId($(`#receivePlaceSelect`).val());
+	receivePlaceId = receivePlaceId ? receivePlaceId : dataFromServer.getFreePlace();
+	let returnPlaceId = dataFromServer.getPlaceId($(`#returnPlaceSelect`).val());
+	returnPlaceId = returnPlaceId ? returnPlaceId : dataFromServer.getFreePlace();
+
+
+	if (!begin || !end) {
+		const deliveryCost = dataFromServer.getDeliveryCost(receivePlaceId) + dataFromServer.getDeliveryCost(returnPlaceId);
+		const resolution = `Итого: ${deliveryCost} ₽`;
+		$(`#bidCost`).text(`Cтоимость доставки авто ${deliveryCost} ₽`);
+		$(`#resolution`).text(resolution);
+		return;
+	}
+
+	const bidCostObj = {
+		car_id: 9,
+		begin: begin,
+		end: end,
+		begin_place_id: receivePlaceId,
+		end_place_id: returnPlaceId,
+	}
+
+
+	const bidCost = await getCost(bidCostObj);
+
+	const deliveryCost = dataFromServer.getDeliveryCost(receivePlaceId) + dataFromServer.getDeliveryCost(returnPlaceId);
+
+	const depositStr = `+ залог (возвращаем полностью по окончанию аренды) ${bidCost.deposit} ₽`
+
+	const resolution = `Итого: ${bidCost.cost + bidCost.deposit + deliveryCost} ₽`;
+
+	if (deliveryCost > 0) $(`#bidCost`).text(`Cтоимость аренды ${bidCost.cost - deliveryCost} ₽ + доставка авто ${deliveryCost} ₽`);
+	else $(`#bidCost`).text(`Cтоимость аренды: ${bidCost.cost} ₽ `);
+
+	$(`#deposit`).text(depositStr);
+	$(`#resolution`).text(resolution)
 }
