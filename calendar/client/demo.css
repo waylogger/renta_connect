@@ -62,7 +62,7 @@
     position: relative;
     background: #FFF;
     box-shadow: 2px 2px 16px rgba(0, 0, 0, 0.25);
-    line-height: 1.4;
+    line-height: 2.75;
     border-radius: 4px;
     max-height: 400px;
     z-index: 1000;
@@ -98,14 +98,14 @@
   .dp-below {
     position: absolute;
     font-size: 0.8em;
-    width: 400px;
+    width: 376px;
     max-width: 100vw;
   }
   
   .dp-permanent {
     position: relative;
     font-size: 0.8em;
-    width: 400px;
+    width: 376px;
     max-width: 100vw;
   }
   
@@ -239,7 +239,7 @@
   .dp-today {
     box-sizing: border-box;
     display: inline-block;
-    width: 33%;
+    width: 100%;
     padding: 8px;
     text-decoration: none;
     color: inherit;
@@ -249,7 +249,7 @@
   
   .dp-permanent .dp-close,
   .dp-permanent .dp-clear {
-    display: none;
+    display: block;
   }
   
   .dp-close:hover,
@@ -272,9 +272,9 @@
   
   .dp-col-header,
   .dp-day {
-    width: 14.28571429%;
+    width: 13.2%;
     display: inline-block;
-    padding: 8px;
+    padding: 8px 1.5px;
     text-align: center;
   }
   
@@ -381,12 +381,13 @@
 .ex-inputs-picker {
   position: absolute;
   z-index: 1000;
-  left: 50.5%;
-  top: calc(100% + 8px);
+  left: 49.9%;
+  top: calc(100% + 6px);
   opacity: 0;
   z-index: -20;
   transform: translateX(-50%);
   transition: all 0.25s;
+  width: 100%;
 }
 
 .ex-inputs-picker-visible {
@@ -427,11 +428,12 @@
 }
 
 .dr-cals .dp-edge-day {
-  visibility: hidden;
+  visibility: visible;
 }
 
 .dr-cals .dp-cal-footer {
-  display: none;
+  display: flex;
+  justify-content: center;
 }
 
 .dr-cals .dp {
@@ -439,7 +441,7 @@
 }
 
 .dr-cals .dp-permanent {
-  max-width: 300px;
+  max-width: 100%;
 }
 
 .dr-cals .dp-selected:focus,

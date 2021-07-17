@@ -40,7 +40,7 @@
 		}
 	}
 
-	function p() {}
+	function p() { }
 
 	function g() {
 		for (var t = arguments, e = t[0], n = 1; n < t.length; ++n) {
@@ -64,14 +64,14 @@
 			mode: "dp-modal",
 			hilightedDate: o(),
 			format: function (t) {
-               
+
 				return t.getMonth() + 1 + "/" + t.getDate() + "/" + t.getFullYear()
 			},
 			parse: function (t) {
 				var e = new Date(t);
 				return isNaN(e) ? o() : e
 			},
-			dateClass: function () {},
+			dateClass: function () { },
 			inRange: function () {
 				return !0
 			}
@@ -123,6 +123,20 @@
 					e.setState({
 						selectedDate: new Date(parseInt(t.target.getAttribute("data-date")))
 					})
+					/**
+					 * @author wlr986
+					*/
+					if (firstDateIsSelect && secondDateIsSelect) {
+						firstDateIsSelect = false;
+						secondDateIsSelect = false;
+					}
+					if (firstDateIsSelect) { 
+						secondDateIsSelect = true;
+						return;
+					}
+					firstDateIsSelect = true;
+					firstDate = new Date(parseInt(t.target.getAttribute("data-date")));
+
 				},
 				"dp-next": function (t, e) {
 					var n = e.state.hilightedDate;
@@ -142,6 +156,9 @@
 					})
 				},
 				"dp-clear": function (t, e) {
+
+					firstDateIsSelect = false;
+					secondDateIsSelect = false;
 					e.setState({
 						selectedDate: null
 					})
@@ -170,21 +187,91 @@
 					u = e.hilightedDate,
 					d = u.getMonth(),
 					c = o().getTime();
-				return '<div class="dp-cal"><header class="dp-cal-header"><button tabindex="-1" type="button" class="dp-prev">Prev</button><button tabindex="-1" type="button" class="dp-cal-month">' + t.months[d] + '</button><button tabindex="-1" type="button" class="dp-cal-year">' + u.getFullYear() + '</button><button tabindex="-1" type="button" class="dp-next">Next</button></header><div class="dp-days">' + n.map(function (t, e) {
-					return '<span class="dp-col-header">' + n[(e + a) % n.length] + "</span>"
-				}).join("") + function (t, e, n) {
-					var a = "",
-						o = new Date(t);
-					o.setDate(1), o.setDate(1 - o.getDay() + e), e && o.getDate() === e + 1 && o.setDate(e - 6);
-					for (var r = 0; r < 42; ++r) a += n(o), o.setDate(o.getDate() + 1);
-					return a
-				}(u, a, function (t) {
-					var e = t.getMonth() !== d,
-						n = !i.inRange(t),
-						a = t.getTime() === c,
-						o = "dp-day";
-					return o += e ? " dp-edge-day" : "", o += h(t, u) ? " dp-current" : "", o += h(t, s) ? " dp-selected" : "", o += n ? " dp-day-disabled" : "", o += a ? " dp-day-today" : "", '<button tabindex="-1" type="button" class="' + (o += " " + i.dateClass(t, r)) + '" data-date="' + t.getTime() + '">' + t.getDate() + "</button>"
-				}) + '</div><footer class="dp-cal-footer"><button tabindex="-1" type="button" class="dp-today">' + t.today + '</button><button tabindex="-1" type="button" class="dp-clear">' + t.clear + '</button><button tabindex="-1" type="button" class="dp-close">' + t.close + "</button></footer></div>"
+
+
+
+				const weekStr = `
+				${n.map(function (t, e) {
+					return `<span class="dp-col-header"> ${n[(e + a) % n.length]} </span>`
+				}).join("")}
+					`
+				const header = `
+					<div class="dp-cal"> 
+					<header class="dp-cal-header"> 
+						<button tabindex="-1" type="button" class="dp-prev">Prev</button> 
+						<button tabindex="-1" type="button" class="dp-cal-month" id="dp-cal-month-text">
+					${t.months[d]} </button>
+						<button tabindex="-1" type="button" class="dp-cal-year">
+					 ${u.getFullYear()} 
+					</button>
+						<button tabindex="-1" type="button" class="dp-next">Next</button>
+						</header>
+						<div class="dp-days">
+					`
+				const closeOrSaveName = firstDateIsSelect ? "Сохранить" : "Закрыть";
+				const footer = `
+				</div>
+				<footer class="dp-cal-footer">
+				
+				<button tabindex="-1" type="button" class="dp-clear">  ${t.clear} </button>
+				<button onClick="hideCal()" tabindex="-1" type="button" class="dp-close" id="dp-close-btn">${closeOrSaveName}</button>
+
+				</footer>
+				</div>`
+				// < button tabindex = "-1" type = "button" class="dp-today" > ${ t.today } </button >
+
+				function resHTML(timestamp, e, n) {
+					var res = "";
+					var newDate = new Date(timestamp);
+					newDate.setDate(1);
+					newDate.setDate(1 - newDate.getDay() + e);
+					e && newDate.getDate() === e + 1 && newDate.setDate(e - 6);
+					for (var r = 0; r < 42; ++r) {
+						const r = n(newDate);
+						res += r;
+						newDate.setDate(newDate.getDate() + 1);
+					}
+					return res;
+				}
+				/**
+				 * @function
+				 * @param {Date}
+				 * @returns {HTMLButtonElement}
+				 * @description смысл функции в том, что она принимает timestamp и возвращает разметку HTML кнопки с необходимыми стилями: пограничный день(pg-edge-day), текущий день (dp-day-today),
+				 * неактивный день (dp-day-disabled), а также текущий и выбранный день (dp-current, dp-select)
+				*/
+				function dayHTML(t) {
+					var currentMonth = d;
+					// e === true if currenthMonth не равен t.Month(). Смысл переменной в том, что она используется для установления класса пограничного дня
+					var onBorder = t.getMonth() !== currentMonth;//Boolean
+					// var n = !i.inRange(t);//Boolean 
+					var shouldToDisabled = isDateShouldBeDisabled(t);
+					var attr = shouldToDisabled ? 'disabled' : '';
+					// Если а установлено, то дата помечается как сегодняшнее число
+					var isToday = shouldToDisabled ? false : t.getTime() === c;//Boolean
+					//итоговая разметка кнопки
+					var res = "dp-day";//String
+
+					var isCurrent = shouldToDisabled ? false : h(t, u);
+					var isSelected = shouldToDisabled ? false : h(t, s);
+
+					res += onBorder ? " dp-edge-day" : "";
+					res += isCurrent ? " dp-current" : "";
+					res += isSelected ? " dp-selected" : "";
+					res += shouldToDisabled ? " dp-day-disabled" : "";
+					res += isToday ? " dp-day-today" : "";
+
+
+					return `
+					<button ${attr} tabindex=\"-1\" type=\"button\" class=\"${(res += " " + i.dateClass(t, r))}\" data-date=\" ${t.getTime()} \" id=\"day-${t.getDate()} \"> ${t.getDate()} </button>
+					`;
+
+				}
+				const body = resHTML(u, a, dayHTML);
+
+
+
+				return header + weekStr + body + footer;
 			}
 		},
 		year: {
@@ -192,7 +279,7 @@
 				var e = t.state,
 					n = e.hilightedDate.getFullYear(),
 					a = e.selectedDate.getFullYear();
-                 
+
 				return '<div class="dp-years">' + function (t, e) {
 					for (var n = "", a = t.opts.max.getFullYear(); a >= t.opts.min.getFullYear(); --a) n += e(a);
 					return n
@@ -217,9 +304,9 @@
 				}
 			},
 			onClick: {
-                
+
 				"dp-year": function (t, e) {
-                    	e.setState({
+					e.setState({
 						hilightedDate: (n = e.state.hilightedDate, a = parseInt(t.target.getAttribute("data-year")), (n = new Date(n)).setFullYear(a), n),
 						view: "day"
 					});
@@ -269,8 +356,8 @@
 						return i
 					},
 					set selectedDate(t) {
-                        
-                   /**update input here !!!  */    
+
+						/**update input here !!!  */
 						t && !a.inRange(t) || (t ? (i = new Date(t), c.state.hilightedDate = i) : i = t, c.updateInput(i), r("select"), c.close())
 					},
 					view: "day"
@@ -278,16 +365,16 @@
 				adjustPosition: p,
 				containerHTML: '<div class="dp"></div>',
 				attachToDom: function () {
-                    
+
 					document.body.appendChild(c.el)
 				},
 				updateInput: function (t) {
-                    
+
 					var e = new y("change", {
 						bubbles: !0
 					});
 					e.simulated = !0, o.value = t ? a.format(t) : "", o.dispatchEvent(e);
-                  
+
 				},
 				computeSelectedDate: function () {
 					return a.parse(o.value)
@@ -315,7 +402,7 @@
 							t.target.focus && t.target.focus(), document.activeElement !== t.target && (t.preventDefault(), w(a))
 						}), D("click", t, n)
 					}(c)), i = l(c.computeSelectedDate(), a.min, a.max), c.state.hilightedDate = i || a.hilightedDate, c.state.view = "day", c.attachToDom(), c.render(), r("open"))
-                    
+
 				},
 				isVisible: function () {
 					return !!c.el && !!c.el.parentNode
@@ -351,8 +438,9 @@
 					}
 				},
 				setState: function (t) {
-					for (var e in t) {c.state[e] = t[e];
-                    }
+					for (var e in t) {
+						c.state[e] = t[e];
+					}
 					r("statechange"), c.render()
 				}
 			};
@@ -363,7 +451,7 @@
 		})), D("mousedown", e, function () {
 			e === document.activeElement && s()
 		}), D("focus", e, s), D("input", e, function (t) {
-            
+
 			var e = n.opts.parse(t.target.value);
 			isNaN(e) || n.setState({
 				hilightedDate: e

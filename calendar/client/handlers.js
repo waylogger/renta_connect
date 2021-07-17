@@ -178,13 +178,13 @@ async function bookCar() {
 		;
 	const bidForm = objToFormData(bidObj);
 
-	const bid = await sendRequest(bidForm);
-	if (bid.bid_id) {
-		$(`#bookButtonId`).text('Поздравляем! Заявка на бронироавние успешно отправлена!');
-		$(`#bookButtonId`).removeClass('book__btn');
-		$(`#bookButtonId`).addClass('book__btn_send');
-		dataFromServer.dataSent = true;
-	}
+	// const bid = await sendRequest(bidForm);
+	// if (bid.bid_id) {
+	// 	$(`#bookButtonId`).text('Поздравляем! Заявка на бронироавние успешно отправлена!');
+	// 	$(`#bookButtonId`).removeClass('book__btn');
+	// 	$(`#bookButtonId`).addClass('book__btn_send');
+	// 	dataFromServer.dataSent = true;
+	// }
 	return true;
 }
 //-------------------------------------------------------------------------------------------------
@@ -353,6 +353,7 @@ function returnPlaceHandle() {
 */
 function carPreview() {
 	const currCar = dataFromServer.getCurrentCar();
+	if (!currCar) return;
 	/*
 	тут убираем цвет, а после его выбора, надпись обновится
 	*/
@@ -415,4 +416,67 @@ async function costPreview() {
 
 	$(`#deposit`).text(depositStr);
 	$(`#resolution`).text(resolution)
+}
+/**
+ * @function
+ * @callback
+*/
+function showCustomReceivePlaceInput() {
+
+	if ($(this).val() === 'Другое место... + 300 ₽') {
+		$(`#receiveCustomPlace`).removeClass('customPlace-hidden');
+		$(`#receiveCustomPlace`).addClass('customPlace-visible');
+	}
+	else{
+
+		$(`#receiveCustomPlace`).addClass('customPlace-hidden');
+		$(`#receiveCustomPlace`).removeClass('customPlace-visible');
+	}
+
+}
+/**
+ * @function
+ * @callback
+*/
+function showCustomReturnPlaceInput() {
+	if ($(this).val() === 'Другое место... + 300 ₽') {
+		$(`#returnCustomPlace`).removeClass('customPlace-hidden');
+		$(`#returnCustomPlace`).addClass('customPlace-visible');
+	}
+	else{
+
+		$(`#returnCustomPlace`).addClass('customPlace-hidden');
+		$(`#returnCustomPlace`).removeClass('customPlace-visible');
+	}
+}
+
+
+function hideCal() {
+	$(`.ex-inputs-picker`).removeClass('ex-inputs-picker-visible');
+}
+
+let firstDateIsSelect = false;
+let secondDateIsSelect = false;
+let firstDate = '';
+function isDateShouldBeDisabled(timestamp) {
+
+	let dt0 = new Date().toLocaleDateString().split(' ')[0];
+	let dt1 = timestamp.toLocaleDateString().split(' ')[0];
+	dt0 = dt0.split('.');
+	dt0 = new Date(dt0[2], dt0[1], dt0[0]);
+
+	dt1 = dt1.split('.');
+	dt1 = new Date(dt1[2], dt1[1], dt1[0]);
+
+	if (dt0 > dt1)
+		return true;
+	if (firstDateIsSelect) {
+		dt0 = firstDate.toLocaleDateString().split(' ')[0];
+		dt0 = dt0.split('.');
+		dt0 = new Date(dt0[2], dt0[1], dt0[0]);
+		if ((dt1 - dt0) > (1000 * 60 * 60 * 24 * 29)) return true;
+		if ((dt1 - dt0) < (-1000 * 60 * 60 * 24 * 29)) {
+			return true;
+		}
+	}
 }
